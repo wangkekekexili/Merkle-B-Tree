@@ -29,17 +29,34 @@ public:
 	const std::vector<Node*>& getNodes() {
 		return this->nodes;
 	}
+	Node* getNode(int index) {
+		return this->nodes[index];
+	}
+	unsigned int nextNodeId() {
+		return this->nodes.size();
+	}
 	void addNode(Node* value) {
 		this->nodes.push_back(value);
 	}
+
 	const std::vector<Edge*>& getEdges() {
 		return this->edges;
+	}
+	Edge* getEdge(int index) {
+		return this->edges[index];
+	}
+	unsigned int nextEdgeId() {
+		return this->edges.size();
 	}
 	void addEdge(Edge* value) {
 		this->edges.push_back(value);
 	}
 
 	bool loadFromFile(std::string nodeFilename, std::string edgeFilename);
+	void clear(){
+		this->nodes.clear();
+		this->edges.clear();
+	}
 };
 
 #endif // _GRAPH_H_

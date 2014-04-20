@@ -19,8 +19,8 @@
 using namespace std;
 
 int main() {
-	Node* n = new Node(0,1,2,Node::POI);
-	cout << n->getLongitude();
-	n->getEdges();
+	Graph* g = new Graph();
+	g->loadFromFile("test.node","test.edge");
+	g->loadFromFile("cal_test.node","cal_test.txt");
 	return 0;
 }

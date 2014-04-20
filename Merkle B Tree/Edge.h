@@ -35,7 +35,7 @@ public:
 		this->endNode = endNode;
 		this->length = length;
 	}
-	Edge(int edgeId, Node* startNode, Node* endNode, double length) {
+	Edge(unsigned int edgeId, Node* startNode, Node* endNode, double length) {
 		this->edgeId = edgeId;
 		this->indexId = 0;
 		this->startNode = startNode;
