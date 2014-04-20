@@ -125,3 +125,42 @@ bool Graph::loadFromFile(string nodeFilename, string edgeFilename) {
 
 	return true;
 }
+
+
+void Graph::makeIndex(Node::INDEXMETHOD indexMethod) {
+	switch (indexMethod) {
+	case Node::DEFAULT:
+		for (vector<Node*>::const_iterator iter = this->nodes.begin();
+			iter != this->nodes.end();
+			iter++) {
+				Node* temp = *iter;
+				temp->setIndexId(temp->getNodeId());
+		}
+	case Node::HILBERT:
+	default:
+		break;
+	}
+}
+
+
+void Graph::sortNodes() {
+	// using selection sort
+	// should be replaced by faster algorithm like quick sort
+
+	unsigned int s = this->nodes.size();
+	for (int i = 0;i != s-1;i++) {
+		int min = i;
+		int minKey = this->nodes[i]->key();
+		for (int j = i+1;j != s;j++) {
+			if (this->nodes[j]->key() < minKey) {
+				minKey = this->nodes[j]->key();
+				min = j;
+			}
+			if (min != i) {
+				Node* temp = this->nodes[i];
+				this->nodes[i] = this->nodes[min];
+				this->nodes[min] = temp;
+			}
+		}
+	}
+}

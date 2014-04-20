@@ -13,10 +13,8 @@
 #include <vector>
 
 #include "Node.h"
-#include "Graph.h"
 
 class Node; // Node.h
-class Graph; // Graph.h
 
 class Edge {
 

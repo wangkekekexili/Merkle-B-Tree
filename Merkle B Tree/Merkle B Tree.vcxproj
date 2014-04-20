@@ -81,12 +81,14 @@
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Driver.cpp" />
     <ClCompile Include="Graph.cpp" />
+    <ClCompile Include="MerkleBTree.cpp" />
     <ClCompile Include="Tools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="Edge.h" />
     <ClInclude Include="Graph.h" />
+    <ClInclude Include="MerkleBTree.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="Tools.h" />
   </ItemGroup>

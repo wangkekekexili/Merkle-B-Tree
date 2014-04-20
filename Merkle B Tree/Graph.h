@@ -14,11 +14,9 @@
 #include <string>
 
 #include "Node.h"
-#include "Edge.h"
 
 class Node;
 class Edge;
-
 class Graph {
 
 private:
@@ -57,6 +55,9 @@ public:
 		this->nodes.clear();
 		this->edges.clear();
 	}
+	
+	void makeIndex(Node::INDEXMETHOD); // set indexId in all the nodes
+	void sortNodes(); // sort the nodes according to indexId of the nodes
 };
 
 #endif // _GRAPH_H_

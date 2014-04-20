@@ -16,9 +16,17 @@
 
 class Edge;
 
+
+
 class Node {
 public:
 	enum NODETYPE {NORMAL, POI}; // an enum type for node type
+
+	// what the indexId means
+	// DEFAULT means indexIds are the same as nodeid
+	// HILBERT means indexIds are arranged according to the result
+	// of the hilbert sorting
+	enum INDEXMETHOD {DEFAULT, HILBERT};
 private:
 	unsigned int nodeId; // the index given by the file, start from 0
 	unsigned int indexId; // the index of a node after a certain sorting
@@ -81,6 +89,9 @@ public:
 	void addEdge(Edge* value) {
 		this->edges.push_back(value);
 	}
-};
 
+	unsigned int key() {
+		return this->indexId;
+	}
+};
 #endif //_NODE_H_
