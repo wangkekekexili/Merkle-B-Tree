@@ -11,11 +11,13 @@
 #include "MerkleBTree.h"
 #include "Graph.h"
 #include "Node.h"
+#include "Crypto.h"
 
 #include <vector>
 #include <string>
 #include <iostream>
 #include <queue>
+#include <sstream>
 
 using namespace std;
 
@@ -24,6 +26,7 @@ using namespace std;
 MerkleBTree::MerkleBTree(Graph* graph, unsigned int fanout, Node::INDEXMETHOD indexMethod, std::string hashMethod) {
 	// some preparation and initialization
 	this->graph = graph;
+	graph->setTree(this);
 	this->fanout = fanout;
 	this->root = NULL;
 	this->hashMethod = hashMethod;
@@ -34,12 +37,16 @@ MerkleBTree::MerkleBTree(Graph* graph, unsigned int fanout, Node::INDEXMETHOD in
 	// bulk load data from nodes in the graph
 	// The first step is to sort the data entries according to a search key.
 	graph->sortNodes();
-	// We allocate an empty page to serve as the root, and insert a pointer to the first page of entries into it.
-	// When the root is full, we split the root, and create a new root page.
-	// Keep inserting entries to the right most index page just above the leaf level, until all entries are indexed.
-	// Note (1) when the right-most index page above the leaf level fills up, it is split; 
-	// (2) this action may, in turn, cause a split of the right-most index page on step closer to the root;
-	// (3) splits only occur on the right-most path from the root to the leaf level.
+
+	// add nodes to the tree
+	// use normal insert here
+	// should be replaced by bulk load later
+	unsigned int numberOfNodes = graph->numberOfNodes();
+	for (int i = 0;i != numberOfNodes;i++) {
+		this->insert(graph->getNode(i));
+	} 
+
+	this->initializeDigest();
 }
 
 
@@ -185,6 +192,9 @@ bool MerkleBTree::insert(Node* node) {
 	}
 	return true;
 }
+bool MerkleBTree::insert(TreeNode* treeNode, Node* node) {
+	return false;
+}
 
 void MerkleBTree::printKeys() {
 	TreeNode* current = this->root;
@@ -217,5 +227,52 @@ void MerkleBTree::printKeys(TreeNode* node) {
 			cout << "\t";
 		}
 
+	}
+}
+
+void MerkleBTree::initializeDigest() {
+	if (this->root == NULL) {
+		return;
+	}
+	else {
+		this->calculateDigest(this->root);
+	}
+}
+
+void MerkleBTree::calculateDigest(TreeNode* treeNode) {
+	if (treeNode->isLeaf() == true) {
+		unsigned int size = treeNode->dataItemsSize();
+		for (int i = 0;i != size;i++) {
+			// "oss" has the string that will be digested
+			// it has the format:
+			// nodeId, longitude, latitude, nodeType, numberOfEdges, {edgeId, length, startNodeId, endNodeId}
+			ostringstream oss; 
+			Node* current = treeNode->getDataItem(i);
+			oss << current->getNodeId() << "," << current->getLongitude() << "," << current->getLatitude() << ","
+				<< current->getNodeType() << current->getEdges().size();
+			for (int j = 0;j != current->getEdges().size();j++) {
+				Edge* currentEdge = current->getEdge(j);
+				oss << "," << currentEdge->getEdgeId() << "," << currentEdge->getLength() << ","
+					<< currentEdge->getStartNode()->getNodeId() << "," << currentEdge->getEndNode()->getNodeId();
+			}
+			treeNode->addDigest(Crypto::hash(oss.str(),this->getHashMethodName()));
+		}
+	}
+	else { // tree node is not a leaf
+		unsigned int size = treeNode->childTreeNodesSize();
+		// first, calculate the digests of the children
+		for (int i = 0;i != size;i++) {
+			this->calculateDigest(treeNode->getChildTreeNode(i));
+		}
+		// second, calculate the digest in the current treeNode
+		for (int i = 0;i != size;i++) {
+			ostringstream oss;
+			oss.clear();
+			TreeNode* currentChildNode = treeNode->getChildTreeNode(i);
+			for (int j = 0;j != currentChildNode->getDigests().size();j++) {
+				oss << currentChildNode->getDigest(j);
+			}
+			treeNode->addDigest(Crypto::hash(oss.str(),this->getHashMethodName()));
+		}
 	}
 }

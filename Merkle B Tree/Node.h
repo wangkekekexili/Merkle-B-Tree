@@ -21,7 +21,7 @@ class Edge;
 class Node {
 public:
 	enum NODETYPE {NORMAL, POI}; // an enum type for node type
-
+	enum DIJKSTRASTATE {UNSCANNED, INHEAP, SCANNED};
 	// what the indexId means
 	// DEFAULT means indexIds are the same as nodeid
 	// HILBERT means indexIds are arranged according to the result
@@ -36,6 +36,8 @@ private:
 	NODETYPE nodeType; // the type of the node
 	std::vector<Edge*> edges; // the edges connected to the node
 	
+	double weight_; // for dijkstra algorithm
+	DIJKSTRASTATE state; // dijkstra algorithm
 public:
 	Node(double longitude,double latitude) {
 		this->nodeId = 0;
@@ -59,7 +61,7 @@ public:
 	void setNodeId(unsigned int value) {
 		this->nodeId = value;
 	}
-	unsigned int getIndexId() {
+	unsigned int getIndexId() const  {
 		return this->indexId;
 	}
 	void setIndexId(unsigned int value) {
@@ -86,12 +88,36 @@ public:
 	const std::vector<Edge*>& getEdges() {
 		return this->edges;
 	}
+	Edge* getEdge(unsigned int index) {
+		return this->edges[index];
+	}
 	void addEdge(Edge* value) {
 		this->edges.push_back(value);
 	}
 
+
 	unsigned int key() {
 		return this->indexId;
 	}
+
+	double weight() {
+		return this->weight_;
+	}
+	void weight(double value) {
+		this->weight_ = value;
+	}
+	DIJKSTRASTATE getState() {
+		return this->state;
+	}
+	void setState(DIJKSTRASTATE value) {
+		this->state = value;
+	}
+
+	// for sorting
+	struct NodeCompare {
+		bool operator()(const Node* l, const Node* r) {
+			return (l->getIndexId() < r->getIndexId());
+		}
+	};
 };
 #endif //_NODE_H_

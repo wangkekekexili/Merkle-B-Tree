@@ -13,8 +13,10 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <vector>
 
 #include "Tools.h"
+#include "NodeHeap.h"
 
 using namespace std;
 
@@ -78,6 +80,42 @@ bool Graph::loadFromFile(string nodeFilename, string edgeFilename) {
 			istringstream iss(line);
 			int category;
 			double lengthToStartNode;
+			// the PoI information length are not increasing
+			// so we need to change them into the increasing order
+			vector<int> categoryVector;
+			categoryVector.clear();
+			vector<double> lengthVector;
+			lengthVector.clear();
+			for (int i = 0;i != numberOfPoIs;i++) {
+				iss >> category >> lengthToStartNode;
+				categoryVector.push_back(category);
+				lengthVector.push_back(lengthToStartNode);
+			}
+			// use selection sort
+			for (int i = 0;i != lengthVector.size()-1;i++) {
+				int mini = i;
+				double minLength = lengthVector[i];
+				for (int j = i+1;j != lengthVector.size();j++) {
+					if (lengthVector[j] < minLength) { 
+						mini = j;
+						minLength = lengthVector[j];
+					}
+				}
+				if (mini != i) {
+					int tempInt = categoryVector[i];
+					categoryVector[i] = categoryVector[mini];
+					categoryVector[mini] = tempInt;
+					double tempDouble = lengthVector[i];
+					lengthVector[i] = lengthVector[mini];
+					lengthVector[mini] = tempDouble;
+				}
+			}
+			ostringstream oss;
+			for (int i = 0;i != numberOfPoIs;i++) {
+				oss << categoryVector[i] << " " << lengthVector[i] <<  " ";
+			}
+			iss.str(oss.str());
+
 			Node* lastNode = startNode; // the Node that will act as the start node of the new edge
 			double lastLength = 0;
 			for (int i = 0;i != numberOfPoIs;i++) {
@@ -126,6 +164,14 @@ bool Graph::loadFromFile(string nodeFilename, string edgeFilename) {
 	return true;
 }
 
+void Graph::flushNodes() {
+	unsigned int size = this->numberOfNodes();
+	for (int i = 0;i != size; i++) {
+		Node* currentNode = this->getNode(i);
+		currentNode->weight(0);
+		currentNode->setState(Node::UNSCANNED);
+	}
+}
 
 void Graph::makeIndex(Node::INDEXMETHOD indexMethod) {
 	switch (indexMethod) {
@@ -163,4 +209,128 @@ void Graph::sortNodes() {
 			}
 		}
 	}
+}
+
+vector<Node*> Graph::findKNN(unsigned int sourceNodeId, unsigned int k) {
+	vector<Node*> resultVector;
+	if (k == 0)
+		return resultVector;
+	Node* sourceNode = NULL;
+	if (this->getTree() != NULL) { // the b tree is built, so we could find the node using the tree
+		sourceNode = this->getTree()->search(sourceNodeId);
+	}
+	else { // we must traverse the "nodes" vector in the graph to find the node
+		for (int i = 0;i != this->numberOfNodes();i++) {
+			if (this->getNode(i)->getNodeId() == sourceNodeId) {
+				sourceNode = this->getNode(i);
+			}
+		}
+	}
+	if (sourceNode == NULL) {
+		cout << "Could not find source node!\n";
+	}
+
+	this->flushNodes();
+	
+	unsigned int PoIsFound = 0;
+	NodeHeap* minHeap = new NodeHeap();
+	minHeap->push(sourceNode);
+	sourceNode->setState(Node::INHEAP);
+	while (minHeap->empty() == false) {
+		Node* current = minHeap->pop();
+		current->setState(Node::SCANNED);
+		if (current->getNodeType() == Node::POI) {
+			resultVector.push_back(current);
+			PoIsFound++;
+			if (PoIsFound == k) {
+				return resultVector;
+			}
+		}
+		// scan the edges that conntect to the "current"
+		for (int i = 0;i != current->getEdges().size();i++) {
+			Edge* e = current->getEdge(i);
+			Node* n = NULL;
+			if (e->getStartNode() == current) {
+				n = e->getEndNode();
+			}
+			else {
+				n = e->getStartNode();
+			}
+			if(n->getState() == Node::UNSCANNED) {
+				n->weight(current->weight() + e->getLength());
+				n->setState(Node::INHEAP);
+				minHeap->push(n);
+			}
+			else if (n->getState() == Node::INHEAP){
+				if (n->weight() > current->weight() + e->getLength()) {
+					minHeap->update(n,current->weight() + e->getLength());
+				}
+			}
+		}
+	}
+	return resultVector;
+}
+
+
+std::vector<Node*> Graph::findKNNAndAllRelatedNodes(unsigned int sourceNodeId, unsigned int k) {
+	vector<Node*> resultVector;
+	if (k == 0)
+		return resultVector;
+	Node* sourceNode = NULL;
+	if (this->getTree() != NULL) { // the b tree is built, so we could find the node using the tree
+		sourceNode = this->getTree()->search(sourceNodeId);
+	}
+	else { // we must traverse the "nodes" vector in the graph to find the node
+		for (int i = 0;i != this->numberOfNodes();i++) {
+			if (this->getNode(i)->getNodeId() == sourceNodeId) {
+				sourceNode = this->getNode(i);
+			}
+		}
+	}
+	if (sourceNode == NULL) {
+		cout << "Could not find source node!\n";
+	}
+
+	this->flushNodes();
+	
+	double lastWeight = 0; // to prevent several lengths(weigths) be the same, need to scan more when the weights are equal even if KNN are found
+	unsigned int PoIsFound = 0;
+	NodeHeap* minHeap = new NodeHeap();
+	minHeap->push(sourceNode);
+	sourceNode->setState(Node::INHEAP);
+	while (minHeap->empty() == false) {
+		Node* current = minHeap->pop();
+		if (PoIsFound == k && current->weight() > lastWeight)
+			break;
+		current->setState(Node::SCANNED);
+		resultVector.push_back(current);
+		if (current->getNodeType() == Node::POI) {
+			PoIsFound++;
+			if (PoIsFound == k) {
+				lastWeight = current->weight();
+			}
+		}
+		// scan the edges that conntect to the "current"
+		for (int i = 0;i != current->getEdges().size();i++) {
+			Edge* e = current->getEdge(i);
+			Node* n = NULL;
+			if (e->getStartNode() == current) {
+				n = e->getEndNode();
+			}
+			else {
+				n = e->getStartNode();
+			}
+			if(n->getState() == Node::UNSCANNED) {
+				n->weight(current->weight() + e->getLength());
+				n->setState(Node::INHEAP);
+				minHeap->push(n);
+			}
+			else if (n->getState() == Node::INHEAP){
+				if (n->weight() > current->weight() + e->getLength()) {
+					minHeap->update(n,current->weight() + e->getLength());
+				}
+			}
+		}
+	}
+	return resultVector;
 }

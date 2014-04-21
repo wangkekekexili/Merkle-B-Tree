@@ -20,6 +20,8 @@
 #include "Node.h"
 #include "Graph.h"
 
+class Graph;
+
 #define DEFAULT_FANOUT 11
 #define DEFAULT_HASH_METHOD "md5"
 
@@ -32,6 +34,7 @@ private:
 	std::vector<MerkleBTreeNode*> childTreeNodes; // used when the node is not a leaf
 	std::vector<Node*> dataItems; // used when the node is a leaf
 	MerkleBTreeNode* nextLeaf; // used when the node is a leaf, to find the next sibling
+	std::vector<std::string> digests; // the digest of the child nodes or date items
 public:
 	MerkleBTreeNode(bool isLeaf = false, bool isRoot = false, MerkleBTreeNode* fatherNode = NULL){
 		this->isLeaf_= isLeaf;
@@ -126,6 +129,16 @@ public:
 	void setNextLeaf(MerkleBTreeNode* treeNode) {
 		this->nextLeaf = treeNode;
 	}
+
+	void addDigest(std::string value) {
+		this->digests.push_back(value);
+	}
+	const std::vector<std::string>& getDigests() {
+		return this->digests;
+	}
+	std::string getDigest(int index) {
+		return this->digests[index];
+	}
 };
 
 typedef MerkleBTreeNode TreeNode;
@@ -162,6 +175,10 @@ public:
 
 	void printKeys();
 	void printKeys(TreeNode* treeNode);
+private:
+	bool insert(TreeNode*,Node*);
+	void initializeDigest();
+	void calculateDigest(MerkleBTreeNode*);
 };
 
 #endif // _MERKLEBTREE_H_

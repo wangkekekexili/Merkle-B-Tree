@@ -14,16 +14,24 @@
 #include <string>
 
 #include "Node.h"
-
+#include "MerkleBTree.h"
 class Node;
 class Edge;
+class MerkleBTree;
 class Graph {
 
 private:
 	std::vector<Node*> nodes;
 	std::vector<Edge*> edges;
-
+	MerkleBTree* tree;
 public:
+	MerkleBTree* getTree() {
+		return this->tree;
+	}
+	void setTree(MerkleBTree* value) {
+		this->tree = value;
+	}
+
 	const std::vector<Node*>& getNodes() {
 		return this->nodes;
 	}
@@ -35,6 +43,9 @@ public:
 	}
 	void addNode(Node* value) {
 		this->nodes.push_back(value);
+	}
+	unsigned int numberOfNodes() {
+		return this->nodes.size();
 	}
 
 	const std::vector<Edge*>& getEdges() {
@@ -49,15 +60,24 @@ public:
 	void addEdge(Edge* value) {
 		this->edges.push_back(value);
 	}
+	unsigned int numberOfEdges() {
+		return this->edges.size();
+	}
 
 	bool loadFromFile(std::string nodeFilename, std::string edgeFilename);
 	void clear(){
 		this->nodes.clear();
 		this->edges.clear();
 	}
-	
+	void flushNodes(); // for dijkstra algorithm, set the node state to UNSCANNED and clear the weight
 	void makeIndex(Node::INDEXMETHOD); // set indexId in all the nodes
 	void sortNodes(); // sort the nodes according to indexId of the nodes
+
+	std::vector<Node*> findKNN(unsigned int sourceNodeId, unsigned int k);
+
+	// for authentication use
+	// the nodes scanned during the dijkstra algorithm will be contained in the stack
+	std::vector<Node*> findKNNAndAllRelatedNodes(unsigned int sourceNodeId, unsigned int k);
 };
 
 #endif // _GRAPH_H_

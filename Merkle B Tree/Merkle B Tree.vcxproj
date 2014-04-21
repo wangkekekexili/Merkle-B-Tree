@@ -82,6 +82,7 @@
     <ClCompile Include="Driver.cpp" />
     <ClCompile Include="Graph.cpp" />
     <ClCompile Include="MerkleBTree.cpp" />
+    <ClCompile Include="NodeHeap.cpp" />
     <ClCompile Include="Tools.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -90,6 +91,7 @@
     <ClInclude Include="Graph.h" />
     <ClInclude Include="MerkleBTree.h" />
     <ClInclude Include="Node.h" />
+    <ClInclude Include="NodeHeap.h" />
     <ClInclude Include="Tools.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
