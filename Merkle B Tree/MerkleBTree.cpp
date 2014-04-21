@@ -192,7 +192,6 @@ void MerkleBTree::printKeys() {
 		return;
 	this->printKeys(current);
 }
-
 void MerkleBTree::printKeys(TreeNode* node) {
 	unsigned int currentLevelTreeNodes = 1;
 	unsigned int nextLevelTreeNodes = 0;

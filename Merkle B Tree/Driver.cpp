@@ -23,11 +23,12 @@ int main() {
 	Graph* g = new Graph();
 	//g->loadFromFile("test.node","test.edge");
 	g->loadFromFile("cal_test.node","cal_test.txt");
-	MerkleBTree* tree = new MerkleBTree(g,3);
-	for (int i = 0;i != 10;i++){
+	MerkleBTree* tree = new MerkleBTree(g,10);
+	for (int i = 0;i != g->getNodes().size();i++){
 		tree->insert(g->getNode(i));
 		//tree->printKeys();
 	}
+	tree->printKeys();
 	TreeNode* result = tree->searchLeaf(4);
 	return 0;
 }
