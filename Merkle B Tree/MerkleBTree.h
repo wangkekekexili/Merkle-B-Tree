@@ -16,6 +16,7 @@
 
 #include <vector>
 #include <string>
+#include <set>
 
 #include "Node.h"
 #include "Graph.h"
@@ -175,10 +176,16 @@ public:
 
 	void printKeys();
 	void printKeys(TreeNode* treeNode);
+	void printDigests();
+	void printDigests(TreeNode* treeNode);
+
+	std::string generateVO(std::vector<Node*>& nodes);
+	std::string calculateRootDigest();
 private:
 	bool insert(TreeNode*,Node*);
 	void initializeDigest();
 	void calculateDigest(MerkleBTreeNode*);
+	std::string generateVO(MerkleBTreeNode* treeNode, std::set<int>& indexSet);
 };
 
 #endif // _MERKLEBTREE_H_

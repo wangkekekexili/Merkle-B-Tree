@@ -78,6 +78,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AuthenticationTree.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Driver.cpp" />
     <ClCompile Include="Graph.cpp" />
@@ -86,6 +87,7 @@
     <ClCompile Include="Tools.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AuthenticationTree.h" />
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="Edge.h" />
     <ClInclude Include="Graph.h" />

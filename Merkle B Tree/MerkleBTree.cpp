@@ -12,12 +12,15 @@
 #include "Graph.h"
 #include "Node.h"
 #include "Crypto.h"
+#include "Tools.h"
 
 #include <vector>
 #include <string>
 #include <iostream>
 #include <queue>
 #include <sstream>
+#include <iomanip>
+#include <set>
 
 using namespace std;
 
@@ -230,6 +233,42 @@ void MerkleBTree::printKeys(TreeNode* node) {
 	}
 }
 
+void MerkleBTree::printDigests() {
+	if (this->root == NULL) {
+		return; 
+	}
+	this->printDigests(this->root);
+}
+void MerkleBTree::printDigests(TreeNode* node) {
+	unsigned int currentLevelTreeNodes = 1;
+	unsigned int nextLevelTreeNodes = 0;
+	queue<TreeNode*> q;
+	q.push(node);
+	while (q.empty() == false) {
+		TreeNode* current = q.front();
+		q.pop();
+		for (int i = 0;i != current->getDigests().size();i++) {
+			Crypto::printHashValue(current->getDigest(i));
+			cout << " ";
+		}
+		for (int i = 0;i != current->getChildTreeNodes().size();i++) {
+			q.push(current->getChildTreeNode(i));
+			nextLevelTreeNodes++;
+		}
+		currentLevelTreeNodes--;
+		if (currentLevelTreeNodes == 0){ // the current level is finished 
+			currentLevelTreeNodes = nextLevelTreeNodes;
+			nextLevelTreeNodes = 0;
+			cout << "\n";
+		}
+		else {
+			cout << "\t\t";
+		}
+
+	}
+
+}
+
 void MerkleBTree::initializeDigest() {
 	if (this->root == NULL) {
 		return;
@@ -246,10 +285,11 @@ void MerkleBTree::calculateDigest(TreeNode* treeNode) {
 			// "oss" has the string that will be digested
 			// it has the format:
 			// nodeId, longitude, latitude, nodeType, numberOfEdges, {edgeId, length, startNodeId, endNodeId}
-			ostringstream oss; 
+			ostringstream oss;
+			oss << setprecision(10);
 			Node* current = treeNode->getDataItem(i);
 			oss << current->getNodeId() << "," << current->getLongitude() << "," << current->getLatitude() << ","
-				<< current->getNodeType() << current->getEdges().size();
+				<< current->getNodeType() << "," << current->getEdges().size();
 			for (int j = 0;j != current->getEdges().size();j++) {
 				Edge* currentEdge = current->getEdge(j);
 				oss << "," << currentEdge->getEdgeId() << "," << currentEdge->getLength() << ","
@@ -275,4 +315,91 @@ void MerkleBTree::calculateDigest(TreeNode* treeNode) {
 			treeNode->addDigest(Crypto::hash(oss.str(),this->getHashMethodName()));
 		}
 	}
+}
+
+
+string MerkleBTree::generateVO(std::vector<Node*>& nodes) {
+	set<int> indexSet;
+	for (vector<Node*>::const_iterator iter = nodes.begin();iter != nodes.end();iter++) {
+		indexSet.insert((*iter)->getIndexId());
+	}
+	return this->generateVO(this->root,indexSet);
+}
+
+string MerkleBTree::calculateRootDigest() {
+	if (this->root == NULL)
+		return "";
+	ostringstream oss;
+	for (int j = 0;j != this->root->getDigests().size();j++) {
+		oss << this->root->getDigest(j);
+	}
+	return Crypto::hash(oss.str(), this->getHashMethodName());
+}
+
+
+string MerkleBTree::generateVO(MerkleBTreeNode* treeNode, std::set<int>& indexSet) {
+	string s = "";
+	if (treeNode->isLeaf() == true) {
+		s += "[";
+		for (int i = 0;i != treeNode->dataItemsSize();i++) {
+			Node* currentNode = treeNode->getDataItem(i);
+			if (indexSet.find(currentNode->getIndexId()) != indexSet.end()) { // the node's index is found in the indexSet
+				ostringstream oss;
+				oss.clear();
+				oss << setprecision(10);
+				oss << "[node," << currentNode->getNodeId() << "," << currentNode->getLongitude() << ","
+					<< currentNode->getLatitude() << "," << currentNode->getNodeType() << "," << currentNode->getEdges().size();
+				for (int j = 0;j != currentNode->getEdges().size();j++) {
+					Edge* currentEdge = currentNode->getEdge(j);
+					oss << "," << currentEdge->getEdgeId() << "," << currentEdge->getLength() << "," 
+						<< currentEdge->getStartNode()->getNodeId() << "," << currentEdge->getEndNode()->getNodeId();
+				}
+				oss << "]";
+				s += oss.str();
+			}
+			else { // the node is not needed, so the hash value is includeed
+				ostringstream oss;
+				oss.clear();
+				oss << "[hash," << Tools::stringToHex(treeNode->getDigest(i)) << "]";
+				s += oss.str();
+			}
+		}
+		s += "]";
+	}
+	else { // the treeNode is not a leaf
+		s += "[";
+		int numberOfKeys = treeNode->getKeys().size();
+		for (int i = 0;i!= numberOfKeys;i++) {
+			int key = treeNode->getKey(i);
+			set<int> originalIndexSet = indexSet;
+			set<int> newIndexSet;
+			for (set<int>::const_iterator iter = originalIndexSet.begin(); iter != originalIndexSet.end(); iter++) {
+				if ((*iter) < key) {
+					newIndexSet.insert((*iter));
+					indexSet.erase(*iter);
+				}
+			}
+			if (newIndexSet.size() == 0) {
+				ostringstream oss;
+				oss.clear();
+				oss << "[hash," << Tools::stringToHex(treeNode->getDigest(i)) << "]";
+				s += oss.str();
+			}
+			else {
+				s += this->generateVO(treeNode->getChildTreeNode(i), newIndexSet);
+			}
+		}
+		if (indexSet.size() == 0) {
+			ostringstream oss;
+			oss.clear();
+			oss << "[hash," << Tools::stringToHex(treeNode->getDigest(numberOfKeys)) << "]";
+			s += oss.str();
+		}
+		else {
+			s += this->generateVO(treeNode->getChildTreeNode(numberOfKeys), indexSet);
+		}
+		s += "]";
+	}
+
+	return s;
 }
