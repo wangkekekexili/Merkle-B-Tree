@@ -12,6 +12,7 @@
 #include "AuthenticationTree.h"
 #include "Tools.h"
 #include "Crypto.h"
+#include "Graph.h"
 
 #include <vector>
 #include <iostream>
@@ -19,6 +20,19 @@
 #include <queue>
 
 using namespace std;
+
+AuthenticationTree::~AuthenticationTree() {
+	queue<AuthenticationTreeNode*> q;
+	q.push(this->root);
+	while (q.empty() != false) {
+		AuthenticationTreeNode* current = q.front();
+		q.pop();
+		for (int i = 0;i != current->getChildNodes().size();i++) {
+			q.push(current->getChildNode(i));
+		}
+		delete current;
+	}
+}
 
 
 bool AuthenticationTree::parseVO(std::string s) {	
@@ -92,6 +106,12 @@ bool AuthenticationTree::parseVO(std::string s) {
 	// next, calculate the digests
 	this->calculateDigest();
 	return true;
+}
+
+bool AuthenticationTree::extractGraphFromVO(string s) {
+	string::size_type sLength = s.length();
+	if (sLength == 0)
+		return false;
 }
 
 

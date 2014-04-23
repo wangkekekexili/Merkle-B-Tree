@@ -228,6 +228,7 @@ vector<Node*> Graph::findKNN(unsigned int sourceNodeId, unsigned int k) {
 	}
 	if (sourceNode == NULL) {
 		cout << "Could not find source node!\n";
+		exit(1);
 	}
 
 	this->flushNodes();
@@ -289,6 +290,8 @@ std::vector<Node*> Graph::findKNNAndAllRelatedNodes(unsigned int sourceNodeId, u
 	}
 	if (sourceNode == NULL) {
 		cout << "Could not find source node!\n";
+		exit(1);
+
 	}
 
 	this->flushNodes();
@@ -300,7 +303,7 @@ std::vector<Node*> Graph::findKNNAndAllRelatedNodes(unsigned int sourceNodeId, u
 	sourceNode->setState(Node::INHEAP);
 	while (minHeap->empty() == false) {
 		Node* current = minHeap->pop();
-		if (PoIsFound == k && current->weight() > lastWeight)
+		if (PoIsFound >= k && current->weight() > lastWeight)
 			break;
 		current->setState(Node::SCANNED);
 		resultVector.push_back(current);
@@ -308,7 +311,9 @@ std::vector<Node*> Graph::findKNNAndAllRelatedNodes(unsigned int sourceNodeId, u
 			PoIsFound++;
 			if (PoIsFound == k) {
 				lastWeight = current->weight();
+				//break;
 			}
+
 		}
 		// scan the edges that conntect to the "current"
 		for (int i = 0;i != current->getEdges().size();i++) {

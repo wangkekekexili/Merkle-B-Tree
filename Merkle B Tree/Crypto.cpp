@@ -51,7 +51,6 @@ void Crypto::printHashValue(string s) {
 	for (int i = 0;i != stringLength;i++) {
 		printf("%02x",(unsigned char)s[i]);
 	}
-	puts("\n");
 }
 
 void Crypto::generateRSAKeys(std::string name, int bits, int eInt) {

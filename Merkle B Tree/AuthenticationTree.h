@@ -89,7 +89,7 @@ public:
 		this->root = NULL;
 		this->hashMethodName = hashMethodName;
 	};
-	~AuthenticationTree(){}
+	~AuthenticationTree();
 
 	AuthenticationTreeNode* getRoot() {
 		return this->root;
@@ -99,6 +99,7 @@ public:
 	}
 
 	bool parseVO(std::string);
+	bool extractGraphFromVO(std::string);
 
 	std::string getRootDigest();
 
