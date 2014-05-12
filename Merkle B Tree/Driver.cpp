@@ -23,14 +23,33 @@
 #include "Tools.h"
 #include "AuthenticationTree.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#pragma comment(lib,"winmm")
+#endif // _WIN32
+
 using namespace std;
 
 #define TIMESOFTEST 100
 
 int main(int argc, char** argv) {
+	
+	// for construction time
+#ifdef _WIN32
+	DWORD begin =  timeGetTime();
+#endif
+	Graph* g = new Graph();
+	g->loadFromFile(argv[1],argv[2]);
+	MerkleBTree* tree = new MerkleBTree(g,3);
+#ifdef _WIN32
+	DWORD end = timeGetTime();
+#endif
+	fprintf(stdout, "Time Used: %.3lf\n", (end-begin)*1.0/1000);
 
+
+	/*
 	if (argc < 4) {
-		cout << "Usage: " << argv[0] << " nodeFilename edgeFilename outputFilename\n";
+		cout << "Usage: " << argv[0] << " nodeFilename edgeFilename outputFilename fanout\n";
 		exit(1);
 	}
 
@@ -44,7 +63,7 @@ int main(int argc, char** argv) {
 	fstream outputFileStream(argv[3],ios::out|ios::trunc);
 	outputFileStream << "NodeId,KNN,VOSize\n";
 	cout << "Build Merkle B Tree.\n";
-	MerkleBTree* tree = new MerkleBTree(g,3);
+	MerkleBTree* tree = new MerkleBTree(g,atoi(argv[4]));
 	cout << "Root Digest: ";
 	Crypto::printHashValue(tree->calculateRootDigest());
 	cout << endl;
@@ -80,5 +99,6 @@ int main(int argc, char** argv) {
 		cout << "\n\n";
 	}
 	outputFileStream.close();
+	*/
 	return 0;
 }

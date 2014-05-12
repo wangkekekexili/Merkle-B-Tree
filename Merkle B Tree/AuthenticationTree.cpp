@@ -112,6 +112,8 @@ bool AuthenticationTree::extractGraphFromVO(string s) {
 	string::size_type sLength = s.length();
 	if (sLength == 0)
 		return false;
+	// TODO
+	return false;
 }
 
 
